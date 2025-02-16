@@ -1133,6 +1133,18 @@ long long llabs(long long i) {
 	return i < 0ll ? -i : i;
 }
 
+// copied straight from the manpage
+static unsigned long next = 1;
+
+int rand(void) {
+	next = next * 1103515245 + 12345;
+	return((unsigned)(next/65536) % 32768);
+}
+
+void srand(unsigned int seed) {
+	next = seed;
+}
+
 
 //XXX TODO: I have no idea if this works.
 //It was copied from: https://stackoverflow.com/a/5422447/2926815
