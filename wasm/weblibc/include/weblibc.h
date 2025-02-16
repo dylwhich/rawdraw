@@ -44,6 +44,10 @@ void qsort(void *base, size_t nmemb, size_t size,
           int (*compar)(const void *, const void *));
 
 
+int abs(int i);
+long labs(long i);
+long long llabs(long long i);
+
 
 void *malloc(size_t size);
 void free(void *ptr);

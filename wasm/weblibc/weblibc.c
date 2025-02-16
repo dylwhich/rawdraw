@@ -1121,6 +1121,19 @@ void qsort(void *base, size_t nel, size_t width, cmpfun cmp)
 }
 //////////////////////////////////////////
 
+int abs(int i) {
+	return i < 0 ? -i : i;
+}
+
+long labs(long i) {
+	return i < 0l ? -i : i;
+}
+
+long long llabs(long long i) {
+	return i < 0ll ? -i : i;
+}
+
+
 //XXX TODO: I have no idea if this works.
 //It was copied from: https://stackoverflow.com/a/5422447/2926815
 
