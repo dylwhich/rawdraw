@@ -2373,6 +2373,191 @@ char * strerror( int error )
 
 
 
+//////////////////////////////////////////////////////////////////////
+// ctype.h
+
+#define _CTcntrl 0x01
+#define _CTdigit 0x02
+#define _CTlower 0x04
+#define _CTpunct 0x08
+#define _CTspace 0x10
+#define _CTupper 0x20
+#define _CTxdigit 0x40
+#define _CTblank 0x80
+
+#define _CTalnum 0x26 // (upper | lower | digit)
+#define _CTalpha 0x24 // (upper | lower)
+#define _CTgraph 0x2E // (alnum | punct) // excludes space
+#define _CTprint 0x3E // (graph | space) // includes space
+
+static const unsigned char _ctype_attrs[257] = {
+	0, // EOF
+	//// Control Characters
+	_CTcntrl, // NUL
+	_CTcntrl, // SOH
+	_CTcntrl, // STX
+	_CTcntrl, // ETX
+	_CTcntrl, // EOT
+	_CTcntrl, // ENQ
+	_CTcntrl, // ACK
+	_CTcntrl, // BEL
+	_CTcntrl, // BS
+	_CTcntrl | _CTspace | _CTblank, // tab (\t)
+	_CTcntrl | _CTspace, // newline (\n)
+	_CTcntrl | _CTspace, // vertical tab
+	_CTcntrl | _CTspace, // form feed
+	_CTcntrl | _CTspace, // carriage return (\r)
+	_CTcntrl, // SO
+	_CTcntrl, // SI
+	_CTcntrl, // DLE
+	_CTcntrl, // DC1
+	_CTcntrl, // DC2
+	_CTcntrl, // DC3
+	_CTcntrl, // DC4
+	_CTcntrl, // NAK
+	_CTcntrl, // SYN
+	_CTcntrl, // ETB
+	_CTcntrl, // CAN
+	_CTcntrl, // EM
+	_CTcntrl, // SUB
+	_CTcntrl, // ESC
+	_CTcntrl, // FS
+	_CTcntrl, // GS
+	_CTcntrl, // RS
+	_CTcntrl, // US
+
+	//// Printable Characters
+	_CTspace | _CTblank, // Space!
+	// Punctuation
+	_CTpunct, // !
+	_CTpunct, // "
+	_CTpunct, // $
+	_CTpunct, // %
+	_CTpunct, // &
+	_CTpunct, // '
+	_CTpunct, // (
+	_CTpunct, // )
+	_CTpunct, // *
+	_CTpunct, // +
+	_CTpunct, // ,
+	_CTpunct, // -
+	_CTpunct, // .
+	_CTpunct, // /
+	// Digits
+	_CTdigit | _CTxdigit, // 0
+	_CTdigit | _CTxdigit, // 1
+	_CTdigit | _CTxdigit, // 2
+	_CTdigit | _CTxdigit, // 3
+	_CTdigit | _CTxdigit, // 4
+	_CTdigit | _CTxdigit, // 5
+	_CTdigit | _CTxdigit, // 6
+	_CTdigit | _CTxdigit, // 7
+	_CTdigit | _CTxdigit, // 8
+	_CTdigit | _CTxdigit, // 9
+	// More punctuation
+	_CTpunct, // :
+	_CTpunct, // ;
+	_CTpunct, // <
+	_CTpunct, // =
+	_CTpunct, // >
+	_CTpunct, // ?
+	_CTpunct, // @
+	/// Uppercase / Hex Digits
+	_CTupper | _CTxdigit, // A
+	_CTupper | _CTxdigit, // B
+	_CTupper | _CTxdigit, // C
+	_CTupper | _CTxdigit, // D
+	_CTupper | _CTxdigit, // E
+	_CTupper | _CTxdigit, // F
+	// Uppercase
+	_CTupper, // G
+	_CTupper, // H
+	_CTupper, // I
+	_CTupper, // J
+	_CTupper, // K
+	_CTupper, // L
+	_CTupper, // M
+	_CTupper, // N
+	_CTupper, // O
+	_CTupper, // P
+	_CTupper, // Q
+	_CTupper, // R
+	_CTupper, // S
+	_CTupper, // T
+	_CTupper, // U
+	_CTupper, // V
+	_CTupper, // W
+	_CTupper, // X
+	_CTupper, // Y
+	_CTupper, // Z
+	// Punctuation
+	_CTpunct, // [
+	_CTpunct, // backslash
+	_CTpunct, // ]
+	_CTpunct, // ^
+	_CTpunct, // _
+	_CTpunct, // `
+	// Lowercase / Hex Digits
+	_CTlower | _CTxdigit, // a
+	_CTlower | _CTxdigit, // b
+	_CTlower | _CTxdigit, // c
+	_CTlower | _CTxdigit, // d
+	_CTlower | _CTxdigit, // e
+	_CTlower | _CTxdigit, // f
+	// Lowercase
+	_CTlower, // g
+	_CTlower, // h
+	_CTlower, // i
+	_CTlower, // j
+	_CTlower, // k
+	_CTlower, // l
+	_CTlower, // m
+	_CTlower, // n
+	_CTlower, // o
+	_CTlower, // p
+	_CTlower, // q
+	_CTlower, // r
+	_CTlower, // s
+	_CTlower, // t
+	_CTlower, // u
+	_CTlower, // v
+	_CTlower, // w
+	_CTlower, // x
+	_CTlower, // y
+	_CTlower, // z
+	// Punctuation
+	_CTpunct, // {
+	_CTpunct, // |
+	_CTpunct, // }
+	_CTpunct, // ~
+	// Control
+	_CTcntrl, // DEL
+};
+
+#define _isctype(name, t) int name(int c) { return 0 != (_ctype_attrs[c+1] & t); }
+
+int toupper(int c) { return islower(c) ? c - 'a' + 'A' : c; }
+int tolower(int c) { return isupper(c) ? c - 'A' + 'a' : c; }
+
+_isctype(isalnum, _CTalnum)
+_isctype(isalpha, _CTalpha)
+_isctype(iscntrl, _CTcntrl)
+_isctype(isdigit, _CTdigit)
+_isctype(isgraph, _CTgraph)
+_isctype(islower, _CTlower)
+_isctype(isprint, _CTprint)
+_isctype(ispunct, _CTpunct)
+_isctype(isspace, _CTspace)
+_isctype(isupper, _CTupper)
+_isctype(isxdigit, _CTxdigit)
+_isctype(isblank, _CTblank)
+
+int isascii(int c) { return x > 0 && x < 128; }
+int isblank(int c) { return isspace(c); }
+
+
+
+
 
 #ifndef __wasm__
 
