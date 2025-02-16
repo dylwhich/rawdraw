@@ -454,6 +454,37 @@ double scalbn(double x, int n);
 double fmod(double x, double y);
 double fabs(double x);
 
+#define M_PI 3.141592653589793
+#define M_E  2.718281828459045
+
+double cos(double x);
+float cosf(float x);
+double sin(double x);
+float sinf(float x);
+double tan(double x);
+float tanf(float x);
+double atan2(double y, double x);
+float atan2f(float y, float x);
+double ceil(double x);
+float ceilf(float x);
+double floor(double x);
+float floorf(float x);
+double round(double x);
+float roundf(float x);
+double fabs(double x);
+float fabsf(float x);
+double sqrt(double x);
+float sqrtf(float x);
+double exp(double x);
+float expf(float x);
+//double frexp(double x, int* exp);
+float frexpf(float x, int* exp);
+double log(double x);
+float logf(float x);
+double pow(double x, double y);
+float powf(float x, float y);
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 // ctype.h
