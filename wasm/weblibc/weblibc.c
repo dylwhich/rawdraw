@@ -1257,6 +1257,8 @@ size_t strnlen(const char *s, size_t n) { const char *p = memchr(s, 0, n); retur
 void *memset(void *dest, int c, size_t n) { unsigned char *s = dest; for (; n; n--, s++) *s = c; }
 char *strcpy(char *d, const char *s) { for (; (*d=*s); s++, d++); }
 char *strncpy(char *d, const char *s, size_t n) { for (; n && (*d=*s); n--, s++, d++); }
+char *stpcpy(char *dest, const char *src) { char *p = dest, *s = src; for (; (*p = *s); p++, s++); return p; }
+char *strcat(char *dest, const char *src) { stpcpy(dest + strlen(dest), src); return dest; }
 int strcmp(const char *l, const char *r)
 {
 	for (; *l==*r && *l; l++, r++);

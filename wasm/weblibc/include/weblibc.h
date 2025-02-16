@@ -61,6 +61,8 @@ size_t strnlen(const char *s, size_t maxlen);
 void *memset(void *s, int c, size_t n);
 char *strcpy(char *dest, const char *src);
 char *strncpy(char *dest, const char *src, size_t n);
+char *stpcpy(char *dest, const char *src);
+char *strcat(char *dest, const char *src);
 int strcmp(const char *s1, const char *s2);
 int strncmp(const char *s1, const char *s2, size_t n);
 char *strstr(const char *haystack, const char *needle);
