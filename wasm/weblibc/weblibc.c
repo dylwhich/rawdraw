@@ -30,10 +30,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ----------------------------------------------------------------------
 */
 
+FILE _stdout;
+FILE _stderr;
+FILE _stdin;
 
-FILE * stdout;
-FILE * stderr;
-FILE * stdin;
+
+FILE * stdout = NULL;
+FILE * stderr = NULL;
+FILE * stdin = NULL;
 
 // These are the functions that we would expect to call from JavaScript.
 //int unlink(const char *pathname);
@@ -42,6 +46,7 @@ FILE * stdin;
 //int creat(const char *pathname, mode_t mode);
 //off_t lseek(int fd, off_t offset, int whence);
 //ssize_t read(int fd, void *buf, size_t count);
+//ssize_t write(int fd, const void *buf, size_t count);
 //int close(int fd);
 //char * getenv(const char *name)
 //void exit(int reason);
@@ -51,6 +56,16 @@ FILE * stdin;
 
 
 // The rest of the implementation.
+
+unsigned int sleep(unsigned int seconds)
+{
+	return 0; // TODO
+}
+
+int usleep(useconds_t usec)
+{
+	return 0;
+}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -857,6 +872,11 @@ long strtol(const char *restrict s, char **restrict p, int base)
 	return strtoxL(s, p, base, 0UL+LONG_MIN);
 }
 
+float strtof(const char *restrict s, char **restrict p)
+{
+	return strtoxD(s, p, 0);
+}
+
 ///////////QSORT///////////////
 /* Copyright (C) 2011 by Valentin Ochs
  *
@@ -1169,7 +1189,7 @@ static free_block free_block_list_head = { 0, 0 };
 static const size_t overhead = sizeof(size_t);
 static const size_t align_to = 16;
 
-void* malloc(size_t size) {
+/*void* malloc(size_t size) {
     size = (size + sizeof(size_t) + (align_to - 1)) & ~ (align_to - 1);
     free_block* block = free_block_list_head.next;
     free_block** head = &(free_block_list_head.next);
@@ -1192,7 +1212,7 @@ void free(void* ptr) {
     free_block* block = (free_block*)(((char*)ptr) - sizeof(size_t));
     block->next = free_block_list_head.next;
     free_block_list_head.next = block;
-}
+}*/
 
 void *calloc(size_t nmemb, size_t size)
 {
@@ -1511,6 +1531,110 @@ void *memchr(const void *src, int c, size_t n)
 	return n ? (void *)s : 0;
 }
 
+char* strdup(const char* str)
+{
+	void* result = malloc(strlen(str) + 1);
+	if (result)
+	{
+		strcpy(result, str);
+		return (char*)result;
+	}
+	return NULL;
+}
+
+char *strtok(char *str, const char *delim)
+{
+	static char *saveptr = NULL;
+	static const char *lastStr = NULL;
+
+	if (str != lastStr) {
+		lastStr = str;
+		saveptr = NULL;
+
+		return strtok_r(str, delim, &saveptr);
+	} else {
+		return strtok_r(NULL, delim, &saveptr);
+	}
+}
+
+char *strtok_r(char *str, const char *delim, char **saveptr)
+{
+	// so if we call strtok("hello there test", " ");
+	// we would get "hello", "there", "test" in succession
+	// so... saveptr would basically point after the nul terminator we added?
+	
+	char *start = str;
+	if (!start) {
+		start = *saveptr;
+	}
+
+	while (*start) {
+		for (char *d = delim; *d; d++) {
+			if (*start == *d) {
+				start++;
+				break;
+			}
+		}
+		break;
+	}
+
+	if (!*start) {
+		return NULL;
+	}
+
+	char *end = start;
+	for (; *end; end++) {
+		for (char *d = delim; *d; d++) {
+			if (*end == *d) {
+				// delimiter matched
+				// end the string here
+				*saveptr = end + 1;
+				*end = '\0';
+				return start;
+			}
+		}
+	}
+	
+	return start;
+}
+
+char *strpbrk(const char *s, const char *accept)
+{
+	for (; *s; s++) {
+		for (char *c = accept; *c; c++) {
+			if (*s == *c) {
+				return s;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// strings.h
+
+int strcasecmp(const char *l, const char *r)
+{
+	for (; *r && *l; l++, r++) {
+		if (*l == *r) continue;
+		if ((*l != *r) && (!isalpha(*l) || !isalpha(*r) || toupper(*l) != toupper(*r))) {
+			break;
+		}
+	}
+	return (unsigned char)toupper(*l) - (unsigned char)toupper(*r);
+}
+
+int strncasecmp(const char *l, const char *r, size_t n)
+{
+	for (; n > 0 && *r && *l; l++, r++, n--) {
+		if ((*l != *r) && (!isalpha(*l) || !isalpha(*r) || toupper(*l) != toupper(*r))) {
+			break;
+		}
+	}
+	return (unsigned char)toupper(*l) - (unsigned char)toupper(*r);
+}
+
 //////////////////////////////////////////////////////////////////////
 // stdio.h
 
@@ -1555,6 +1679,21 @@ size_t __fwritex(const unsigned char *restrict s, size_t l, FILE *restrict f)
 	return l+i;
 }
 
+int fgetc(FILE *stream)
+{
+	return __uflow(stream);
+}
+
+int getc(FILE *stream)
+{
+	return __uflow(stream);
+}
+
+int getchar(void)
+{
+	return __uflow(stdin);
+}
+
 
 int fputc(int c, FILE *f)
 {
@@ -1568,6 +1707,22 @@ int fputs(const char *restrict s, FILE *restrict f)
 	return (fwrite(s, 1, l, f)==l) - 1;
 }
 
+int putchar(int c)
+{
+	return putc(c, stdout);
+}
+
+int puts(const char *s)
+{
+	return fputs(s, stdout);
+}
+
+int fflush(FILE *stream)
+{
+	_wlc_stdoutWrite(NULL, "testing\n", 8);
+	return 0;
+}
+
 
 size_t fwrite(const void *restrict src, size_t size, size_t nmemb, FILE *restrict f)
 {
@@ -1579,6 +1734,43 @@ size_t fwrite(const void *restrict src, size_t size, size_t nmemb, FILE *restric
 	return k==l ? nmemb : k/size;
 }
 
+FILE *fopen(const char *fn, const char *mode)
+{
+	return NULL;
+}
+
+int fclose(FILE *stream)
+{
+	return 0;
+}
+
+
+void __attribute__((export_name("__std_files_init"))) __std_files_init(void)
+{
+	if (!stdout) {
+		__towrite(&_stdout);
+		_stdout.write = _wlc_stdoutWrite;
+		_stdout.buf = sbrk(1024);
+		_stdout.buf_size = 1024;
+		stdout = &_stdout;
+	}
+	if (!stderr)
+	{
+		__towrite(&_stderr);
+		_stderr.write = _wlc_stderrWrite;
+		_stderr.buf = sbrk(1024);
+		_stderr.buf_size = 1024;
+		stderr = &_stderr;
+	}
+
+	if (!stdin) {
+		__toread(&_stdin);
+		_stdin.read = _wlc_stdinRead;
+		_stdin.buf = sbrk(1024);
+		_stderr.buf_size = 1024;
+		stdin = &_stdin;
+	}
+}
 
 
 int printf(const char *restrict fmt, ...)
@@ -1622,6 +1814,69 @@ int fprintf(FILE *restrict f, const char *restrict fmt, ...)
 	ret = vfprintf(f, fmt, ap);
 	va_end(ap);
 	return ret;
+}
+
+int vsprintf(char *str, const char *fmt, va_list ap)
+{
+	FILE f;
+	f.buf = str;
+	__towrite(&f);
+	return vfprintf(&f, fmt, ap);
+}
+
+int vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
+{
+	FILE f;
+	f.buf = str;
+	f.buf_size = size;
+	__towrite(&f);
+	
+	return vfprintf(&f, fmt, ap);
+}
+
+int scanf(const char *fmt, ...)
+{
+	int ret;
+	va_list ap;
+	va_start(ap, fmt);
+	ret = vscanf(fmt, ap);
+	va_end(ap);
+	return ret;
+}
+
+int fscanf(FILE *stream, const char *fmt, ...)
+{
+	int ret;
+	va_list ap;
+	va_start(ap, fmt);
+	ret = fscanf(stream, fmt, ap);
+	va_end(ap);
+	return ret;
+}
+
+int sscanf(const char *str, const char *fmt, ...)
+{
+	int ret;
+	va_list ap;
+	va_start(ap, fmt);
+	ret = vsscanf(str, fmt, ap);
+	va_end(ap);
+	return ret;
+}
+
+int vscanf(const char *format, va_list ap)
+{
+	return 0;
+}
+
+int vsscanf(const char *str, const char *format, va_list ap)
+{
+	return 0;
+}
+
+int vfscanf(FILE *stream, const char *format, va_list ap)
+{
+	return 0;
 }
 
 
@@ -2363,6 +2618,54 @@ int __signbitf(float x)
 	return y.i>>31;
 }
 
+long double __floatsitf (int i)
+{
+	if (i<0)
+	{
+		return (long double)0;
+	}
+	return (long double)i;
+}
+
+int __getf2 (long double a, long double b)
+{
+	return (!isnan(a) && !isnan(b) && a >= b) ? 1 : -1;
+}
+
+int __netf2(long double a, long double b)
+{
+	return isnan(a) || isnan(b) || a != b;
+}
+
+int __eqtf2 (long double a, long double b)
+{
+	return !isnan(a) && !isnan(b) && a == b;
+}
+
+long double __multf3(long double a, long double b)
+{
+	return a*b;
+}
+
+long double __addtf3(long double a, long double b)
+{
+	return a+b;
+}
+
+double __trunctfdf2 (long double a)
+{
+	return (double)a;
+}
+
+long double __extenddftf2 (double a)
+{
+	return (long double)a;
+}
+
+ long double __floatunsitf (unsigned int i)
+ {
+	return (long double)i;
+ }
 
 double frexp(double x, int *e)
 {
@@ -2581,8 +2884,7 @@ _isctype(isupper, _CTupper)
 _isctype(isxdigit, _CTxdigit)
 _isctype(isblank, _CTblank)
 
-int isascii(int c) { return x > 0 && x < 128; }
-int isblank(int c) { return isspace(c); }
+int isascii(int c) { return c > 0 && c < 128; }
 
 
 

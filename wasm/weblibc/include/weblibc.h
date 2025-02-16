@@ -37,6 +37,7 @@ unsigned long long int strtoull(const char *nptr, char **endptr,
 
 double strtod(const char *nptr, char **endptr);
 long int strtol(const char *nptr, char **endptr, int base);
+float strtof(const char *s, char **p);
 
 
 
@@ -79,6 +80,17 @@ char *strrchr(const char *s, int c);
 int memcmp(const void *s1, const void *s2, size_t n);
 void *memmove(void *dest, const void *src, size_t n);
 void *memchr(const void *src, int c, size_t n);
+char *strdup(const char *str);
+char *strtok(char *str, const char *delim);
+char *strtok_r(char *str, const char *delim, char **saveptr);
+char *strpbrk(const char *s, const char *accept);
+
+//////////////////////////////////////////////////////////////////////////////
+// strings.h
+
+int strcasecmp(const char *s1, const char *s2);
+int strncasecmp(const char *s1, const char *s2, size_t n);
+
 
 //////////////////////////////////////////////////////////////////////////////
 // stdio.h
@@ -125,6 +137,15 @@ extern FILE * stderr;
 extern FILE * stdin;
 #define EOF -1
 
+
+// Compatibility extensions
+//////////////////////////////////////////////////////////////////////////////
+
+off_t _wlc_stdoutWrite(FILE *f, const unsigned char *buf, size_t n);
+off_t _wlc_stderrWrite(FILE *f, const unsigned char *buf, size_t n);
+off_t _wlc_stdinRead(FILE *f, unsigned char *buf, size_t n);
+
+
 /* whence values for lseek(2) */
 #define	SEEK_SET	0	/* set file offset to offset */
 #define	SEEK_CUR	1	/* set file offset to current plus offset */
@@ -143,6 +164,8 @@ extern FILE * stdin;
 #define FLOCK(f)
 #define FUNLOCK(f)
 
+#define putc fputc
+
 FILE *fopen(const char *pathname, const char *mode);
 FILE *fdopen(int fd, const char *mode);
 int fseek(FILE *stream, long offset, int whence);
@@ -151,9 +174,11 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 size_t fwrite(const void *ptr, size_t size, size_t nmemb,
          FILE *stream);
 int fclose(FILE *stream);
+int fgetc(FILE *stream);
+int getc(FILE *stream);
+int getchar(void);
 int fputs(const char *s, FILE *stream);
 int fputc(int c, FILE *stream);
-int putc(int c, FILE *stream);
 int putchar(int c);
 int puts(const char *s);
 int fflush(FILE *stream);
@@ -193,8 +218,15 @@ int open(const char *pathname, int flags, ...); //with mode_t as the first param
 int creat(const char *pathname, mode_t mode);
 off_t lseek(int fd, off_t offset, int whence);
 ssize_t read(int fd, void *buf, size_t count);
+ssize_t write(int fd, const void *buf, size_t count);
 int close(int fd);
 void * sbrk(int size);
+
+typedef unsigned int useconds_t;
+
+unsigned int sleep(unsigned int seconds);
+int usleep(useconds_t usec);
+
 
 //////////////////////////////////////////////////////////////////////////////
 // time.h / sys/time.h
@@ -239,6 +271,23 @@ typedef long int time_t;
 
 struct tm *localtime(const time_t *timep);
 time_t time(time_t *tloc);
+
+// for clock_gettime
+struct timespec
+{
+	time_t tv_sec;
+	int tv_nsec;
+};
+
+#define CLOCK_REALTIME 0
+#define CLOCK_MONOTONIC 1
+
+typedef int clockid_t;
+
+int clock_getres(clockid_t clockid, struct timespec *res);
+int clock_gettime(clockid_t clockid, struct timespec *tp);
+int clock_settime(clockid_t clockid, const struct timespec *tp);
+int nanosleep(const struct timespec *req, struct timespec *rem);
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -388,7 +437,7 @@ long double ldexpl(long double x, int exp);
 //////////////////////////////////////////////////////////////////////////////
 // assert.h
 
-#define assert( x ) { if( !x ) { fprintf( stderr, "Assert on " __FILE__ " on line %d\n", __LINE__ ); } }
+#define assert( x ) { if( !(x) ) { fprintf( stderr, "Assert on " __FILE__ " on line %d\n", __LINE__ ); } }
 
 //////////////////////////////////////////////////////////////////////////////
 // dlsym.h
@@ -452,11 +501,12 @@ int __signbitf(float);
 double frexp(double x, int *e);
 double scalbn(double x, int n);
 double fmod(double x, double y);
-double fabs(double x);
+float fmodf(float x, float y);
 
 #define M_PI 3.141592653589793
 #define M_E  2.718281828459045
 
+// will be exported from javascript
 double cos(double x);
 float cosf(float x);
 double sin(double x);
